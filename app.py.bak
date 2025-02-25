@@ -1,0 +1,62 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def load_data(file):
+    ext = file.name.split(".")[-1].lower()
+    if ext == "csv":
+        return pd.read_csv(file)
+    elif ext in ["xls", "xlsx"]:
+        return pd.read_excel(file)
+    else:
+        st.error("Unsupported file format. Please upload a CSV or Excel file.")
+        return None
+
+def show_statistics(df):
+    st.write("### Basic Statistics")
+    st.write(df.describe().T)
+
+def show_graphs(df):
+    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    if not numeric_cols:
+        st.warning("No numerical columns found for visualization.")
+        return
+    
+    st.write("### Data Visualizations")
+    
+    # Histogram
+    st.subheader("Histogram")
+    column = st.selectbox("Select a column for histogram", numeric_cols)
+    fig, ax = plt.subplots()
+    sns.histplot(df[column], bins=20, kde=True, ax=ax)
+    st.pyplot(fig)
+    
+    # Box Plot
+    st.subheader("Box Plot")
+    fig, ax = plt.subplots()
+    sns.boxplot(y=df[column], ax=ax)
+    st.pyplot(fig)
+    
+    # Line Chart
+    st.subheader("Trend Line")
+    fig, ax = plt.subplots()
+    df[column].plot(kind='line', ax=ax)
+    st.pyplot(fig)
+
+def main():
+    st.title("Data Analysis Dashboard")
+    st.write("Upload a CSV or Excel file to analyze the data.")
+    
+    file = st.file_uploader("Upload File", type=["csv", "xls", "xlsx"])
+    
+    if file is not None:
+        df = load_data(file)
+        if df is not None:
+            st.write("### Preview of Data")
+            st.write(df.head())
+            show_statistics(df)
+            show_graphs(df)
+
+if __name__ == "__main__":
+    main()
